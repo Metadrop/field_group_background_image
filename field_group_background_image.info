@@ -1,0 +1,5 @@
+name = Field Group Background Image
+description = Provides a div field group with a background image.
+package = Fields
+dependencies[] = field_group
+core = 7.x
