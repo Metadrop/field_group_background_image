@@ -1,5 +1,5 @@
 name = Field Group Background Image
-description = Provides a div field group with a background image.
+description = Provides a field group display formatter that consists in a div with a background image.
 package = Fields
 dependencies[] = field_group
 core = 7.x

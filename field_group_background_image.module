@@ -3,7 +3,7 @@
  * @file
  * Field Group Background Image module.
  *
- * Defines a field group display formatter that consits in a div with a background image.
+ * Defines a field group display formatter that consists in a div with a background image.
  */
 
 /**
@@ -91,7 +91,7 @@ function field_group_background_image_field_group_format_settings($group) {
 /**
  * Implements hook_field_group_pre_render().
  *
- * Render the field group link.
+ * Render the field group.
  */
 function field_group_background_image_field_group_pre_render(&$element, $group, &$form) {
   if ($group->format_type == 'div_background_image') {
