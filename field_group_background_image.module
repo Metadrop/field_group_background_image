@@ -9,13 +9,13 @@
 /**
  * Implements hook_field_group_formatter_info().
  *
- * Define the field group 'Div with background image'.
+ * Define the field group 'Div (background image)'.
  */
 function field_group_background_image_field_group_formatter_info() {
   return array(
     'display' => array(
       'div_background_image' => array(
-        'label' => t('Div with background image'),
+        'label' => t('Div (background image)'),
         'format_types' => array('open'),
         'instance_settings' => array(
           'classes' => '',
