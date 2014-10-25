@@ -71,32 +71,38 @@ function field_group_background_image_field_group_format_settings($group) {
       }
     }
 
-    $form['instance_settings']['background_image'] = array(
-      '#title' => t('Image field'),
-      '#type' => 'select',
-      '#options' => $options_image,
-      '#default_value' => isset($settings['background_image']) ? $settings['background_image'] : '',
-      '#empty_option' => t('None'),
-      '#weight' => 20,
-    );
-    $image_styles = image_style_options(FALSE, PASS_THROUGH);
-    $form['instance_settings']['image_style'] = array(
-      '#title' => t('Image style'),
-      '#type' => 'select',
-      '#options' => $image_styles,
-      '#default_value' => isset($settings['image_style']) ? $settings['image_style'] : '',
-      '#empty_option' => t('None (original image)'),
-      '#weight' => 21,
-    );
+    if (module_exists('image')) {
+      $form['instance_settings']['background_image'] = array(
+        '#title' => t('Image field'),
+        '#type' => 'select',
+        '#options' => $options_image,
+        '#default_value' => isset($settings['background_image']) ? $settings['background_image'] : '',
+        '#empty_option' => t('None'),
+        '#weight' => 20,
+      );
+      $image_styles = image_style_options(FALSE, PASS_THROUGH);
+      $form['instance_settings']['image_style'] = array(
+        '#title' => t('Image style'),
+        '#type' => 'select',
+        '#options' => $image_styles,
+        '#default_value' => isset($settings['image_style']) ? $settings['image_style'] : '',
+        '#empty_option' => t('None (original image)'),
+        '#weight' => 21,
+      );
+    }
 
-    $form['instance_settings']['background_color'] = array(
-      '#title' => t('Color field'),
-      '#type' => 'select',
-      '#options' => $options_color,
-      '#default_value' => isset($settings['background_color']) ? $settings['background_color'] : '',
-      '#empty_option' => t('None'),
-      '#weight' => 22,
-    );
+    // @todo: Add support for colorfield and color_field modules.
+    if (module_exists('jquery_colorpicker')) {
+
+      $form['instance_settings']['background_color'] = array(
+        '#title' => t('Color field'),
+        '#type' => 'select',
+        '#options' => $options_color,
+        '#default_value' => isset($settings['background_color']) ? $settings['background_color'] : '',
+        '#empty_option' => t('None'),
+        '#weight' => 22,
+      );
+    }
 
     return $form;
   }
