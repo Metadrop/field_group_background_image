@@ -22,6 +22,7 @@ function field_group_background_image_field_group_formatter_info() {
           'show_label' => '',
           'background_image' => '',
           'image_style' => '',
+          'background_color' => '',
         ),
         'default_formatter' => 'open',
       ),
@@ -84,6 +85,21 @@ function field_group_background_image_field_group_format_settings($group) {
       '#weight' => 21,
     );
 
+    foreach ($fields as $field_name => $field) {
+      $field_info = field_info_field($field_name);
+      if ($field_info['type'] == 'jquery_colorpicker') {
+        $options[$field_name] = $field['label'];
+      }
+    }
+    $form['instance_settings']['background_color'] = array(
+      '#title' => t('Color Field'),
+      '#type' => 'select',
+      '#options' => $options,
+      '#default_value' => isset($settings['background_color']) ? $settings['background_color'] : '',
+      '#empty_option' => t('None (transparent)'),
+      '#weight' => 22,
+    );
+
     return $form;
   }
 }
@@ -124,6 +140,7 @@ function field_group_background_image_field_group_pre_render(&$element, $group, 
       $entity    = $form[$entity_key];
       $settings  = $group->format_settings['instance_settings'];
       $image_url = '';
+      $background_color = '';
 
       if (!empty($settings['background_image'])) {
 
@@ -146,6 +163,18 @@ function field_group_background_image_field_group_pre_render(&$element, $group, 
         }
       }
 
+      if (!empty($settings['background_color'])) {
+
+        $field_name = $settings['background_color'];
+        if (isset($entity->{$field_name})) {
+
+          $field = field_get_items($group->entity_type, $entity, $settings['background_color']);
+          if ($field && !empty($field[0]['jquery_colorpicker'])) {
+            $background_color = '#' . $field[0]['jquery_colorpicker'];
+          }
+        }
+      }
+
       $element['#type'] = 'markup';
 
       $attributes = array();
@@ -154,6 +183,9 @@ function field_group_background_image_field_group_pre_render(&$element, $group, 
       }
       if ($image_url) {
         $attributes['style'] = "background-image: url('$image_url');";
+      }
+      if ($background_color) {
+        $attributes['style'] .= "background-color: $background_color;";
       }
 
       $element['#prefix'] = '<div' . drupal_attributes($attributes) . '>';
