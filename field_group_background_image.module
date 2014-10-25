@@ -66,14 +66,16 @@ function field_group_background_image_field_group_format_settings($group) {
       if ($field_info['type'] == 'image') {
         $options_image[$field_name] = $field['label'];
       }
-      elseif ($field_info['type'] == 'jquery_colorpicker') {
+      elseif ($field_info['type'] == 'jquery_colorpicker'
+        || $field_info['type'] == 'colorfield'
+        || $field_info['type'] == 'color_field_rgb') {
         $options_color[$field_name] = $field['label'];
       }
     }
 
     if (module_exists('image')) {
       $form['instance_settings']['background_image'] = array(
-        '#title' => t('Image field'),
+        '#title' => t('Background: Image field'),
         '#type' => 'select',
         '#options' => $options_image,
         '#default_value' => isset($settings['background_image']) ? $settings['background_image'] : '',
@@ -82,7 +84,7 @@ function field_group_background_image_field_group_format_settings($group) {
       );
       $image_styles = image_style_options(FALSE, PASS_THROUGH);
       $form['instance_settings']['image_style'] = array(
-        '#title' => t('Image style'),
+        '#title' => t('Background: Image style'),
         '#type' => 'select',
         '#options' => $image_styles,
         '#default_value' => isset($settings['image_style']) ? $settings['image_style'] : '',
@@ -91,11 +93,10 @@ function field_group_background_image_field_group_format_settings($group) {
       );
     }
 
-    // @todo: Add support for colorfield and color_field modules.
-    if (module_exists('jquery_colorpicker')) {
+    if ($options_color) {
 
       $form['instance_settings']['background_color'] = array(
-        '#title' => t('Color field'),
+        '#title' => t('Background: Color field'),
         '#type' => 'select',
         '#options' => $options_color,
         '#default_value' => isset($settings['background_color']) ? $settings['background_color'] : '',
@@ -168,13 +169,21 @@ function field_group_background_image_field_group_pre_render(&$element, $group, 
       }
 
       if (!empty($settings['background_color'])) {
-
         $field_name = $settings['background_color'];
         if (isset($entity->{$field_name})) {
 
           $field = field_get_items($group->entity_type, $entity, $field_name);
-          if ($field && !empty($field[0]['jquery_colorpicker'])) {
-            $background_color = '#' . $field[0]['jquery_colorpicker'];
+          if ($field) {
+            if (!empty($field[0]['jquery_colorpicker'])) {
+
+              // Jquery Colorpicker module.
+              $background_color = '#' . $field[0]['jquery_colorpicker'];
+            }
+            elseif (!empty($field[0]['rgb'])) {
+
+              // Colorfield & Color Field module.
+              $background_color = $field[0]['rgb'];
+            }
           }
         }
       }
