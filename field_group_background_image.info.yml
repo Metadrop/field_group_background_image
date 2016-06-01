@@ -1,0 +1,5 @@
+name: Field Group Background Image
+type: module
+description: Field Group Background Image
+core: 8.x
+package: Fields

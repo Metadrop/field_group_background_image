@@ -1,0 +1,16 @@
+{
+  "name": "drupal/field_group_background_image",
+  "type": "drupal-module",
+  "description": "Field Group Background Image",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/field_group_background_image",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "http://drupal.org/project/issues/field_group_background_image",
+    "source": "http://cgit.drupalcode.org/field_group_background_image"
+  },
+  "require": {
+    "drupal/field_group": "8.*"
+  }
+}
