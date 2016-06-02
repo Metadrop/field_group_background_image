@@ -102,7 +102,8 @@ class BackgroundImage extends FieldGroupFormatterBase {
     $summary = parent::settingsSummary();
 
     if ($image = $this->getSetting('image')) {
-      $summary[] = $this->t('Image: @image', ['@image' => $image]);
+      $imageFields = $this->getImageFields();
+      $summary[] = $this->t('Image field: @image', ['@image' => $imageFields[$image]]);
     }
 
     if ($imageStyle = $this->getSetting('image_style')) {
