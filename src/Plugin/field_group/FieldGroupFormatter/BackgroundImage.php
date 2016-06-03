@@ -34,26 +34,34 @@ class BackgroundImage extends FieldGroupFormatterBase {
 
     $attributes = new Attribute();   
 
+    // Add the HTML ID.
     if ($id = $this->getSetting('id')) {
       $attributes['id'] = Html::getId($id);
     }
 
+    // Add the HTML classes.
     if ($classes = $this->getSetting('classes')) {
       $attributes['class'] = explode(' ', $classes);
     }
     $attributes['class'][] = 'field-group-background-image';
 
-    // Image
-    $fid = $rendering_object['#' . $this->group->entity_type]->get('field_image')->getValue()[0]['target_id'];
-    $file = File::load($fid);
-    $url = ImageStyle::load($this->getSetting('image_style'))->buildUrl($file->getFileUri());
-    $attributes['style'] = strtr("background-image: url('@url')", ['@url' => $url]);
+    // Add the background image.
+    if (($image = $this->getSetting('image')) && array_key_exists($image, $this->getImageFields())) {
+      // @todo check for an empty field.
+      $fid = $rendering_object['#' . $this->group->entity_type]->get($image)->getValue()[0]['target_id'];
+      $url = ImageStyle::load($this->getSetting('image_style'))->buildUrl(File::load($fid)->getFileUri());
+      $attributes['style'] = strtr("background-image: url('@url')", ['@url' => $url]);    
+    }
 
     $element['#type'] = 'container';
     $element['#attributes'] = $attributes;
 
   }
 
+  /**
+   * Get all image fields for the current entity and bundle.
+   * @return array
+   */
   protected function getImageFields() {
     $fields = \Drupal::entityManager()->getFieldDefinitions($this->group->entity_type, $this->group->bundle);
 
@@ -74,23 +82,27 @@ class BackgroundImage extends FieldGroupFormatterBase {
 
     $form = parent::settingsForm();
 
-    $imageFields = $this->getImageFields();
-// @todo add check for empty imagefields.
-    $form['image'] = [
-      '#title' => t('Image'),
-      '#type' => 'select',
-      '#options' => $imageFields,
-      '#default_value' => $this->getSetting('image'),
-      '#weight' => 1,
-    ];
+    if ($imageFields = $this->getImageFields()) {
+      $form['image'] = [
+        '#title' => t('Image'),
+        '#type' => 'select',
+        '#options' => $imageFields,
+        '#default_value' => $this->getSetting('image'),
+        '#weight' => 1,
+      ];
 
-    $form['image_style'] = [
-      '#title' => t('Image style'),
-      '#type' => 'select',
-      '#options' => image_style_options(FALSE),
-      '#default_value' => $this->getSetting('image_style'),
-      '#weight' => 2,
-    ];
+      $form['image_style'] = [
+        '#title' => t('Image style'),
+        '#type' => 'select',
+        '#options' => image_style_options(FALSE),
+        '#default_value' => $this->getSetting('image_style'),
+        '#weight' => 2,
+      ];
+    } else {
+      $form['error'] = [
+        '#markup' => t('Please add an image field to continue.'),
+      ];
+    }
 
     return $form;
   }
