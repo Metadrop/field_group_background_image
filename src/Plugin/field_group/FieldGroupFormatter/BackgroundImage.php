@@ -31,7 +31,6 @@ class BackgroundImage extends FieldGroupFormatterBase {
    * {@inheritdoc}
    */
   public function preRender(&$element, $rendering_object) {
-
     $attributes = new Attribute();   
 
     // Add the HTML ID.
@@ -45,17 +44,21 @@ class BackgroundImage extends FieldGroupFormatterBase {
     }
     $attributes['class'][] = 'field-group-background-image';
 
-    // Add the background image.
+    // Add the background image when a field has been selected in the settings form
+    // and when it is still present at the time of rendering.
     if (($image = $this->getSetting('image')) && array_key_exists($image, $this->getImageFields())) {
-      // @todo check for an empty field.
-      $fid = $rendering_object['#' . $this->group->entity_type]->get($image)->getValue()[0]['target_id'];
-      $url = ImageStyle::load($this->getSetting('image_style'))->buildUrl(File::load($fid)->getFileUri());
-      $attributes['style'] = strtr("background-image: url('@url')", ['@url' => $url]);    
+      // Only add a background image if one is present.
+      if ($imageFieldValue = $rendering_object['#' . $this->group->entity_type]->get($image)->getValue()) {
+        $fid = $imageFieldValue[0]['target_id'];
+        $fileUri = File::load($fid)->getFileUri();
+        $url = ImageStyle::load($this->getSetting('image_style'))->buildUrl($fileUri);
+        $attributes['style'] = strtr("background-image: url('@url')", ['@url' => $url]);
+      }    
     }
 
+    // Render the element as a HTML div and add the attributes.
     $element['#type'] = 'container';
     $element['#attributes'] = $attributes;
-
   }
 
   /**
@@ -79,7 +82,6 @@ class BackgroundImage extends FieldGroupFormatterBase {
    * {@inheritdoc}
    */
   public function settingsForm() {
-
     $form = parent::settingsForm();
 
     if ($imageFields = $this->getImageFields()) {
