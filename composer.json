@@ -1,7 +1,7 @@
 {
   "name": "drupal/field_group_background_image",
   "type": "drupal-module",
-  "description": "Field Group Background Image",
+  "description": "Field Group Background",
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
   "homepage": "https://www.drupal.org/project/field_group_background_image",
