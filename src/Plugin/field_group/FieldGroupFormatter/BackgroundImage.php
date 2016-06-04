@@ -44,6 +44,8 @@ class BackgroundImage extends FieldGroupFormatterBase {
     }
     $attributes['class'][] = 'field-group-background-image';
 
+    // @todo: check image style!s
+
     // Add the background image when a field has been selected in the settings form
     // and when it is still present at the time of rendering.
     if (($image = $this->getSetting('image')) && array_key_exists($image, $this->getImageFields())) {
