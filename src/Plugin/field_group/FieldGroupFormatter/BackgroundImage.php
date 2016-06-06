@@ -39,21 +39,22 @@ class BackgroundImage extends FieldGroupFormatterBase {
     }
 
     // Add the HTML classes.
+    $attributes['class'] = [];
     if ($classes = $this->getSetting('classes')) {
       $attributes['class'] = explode(' ', $classes);
     }
     $attributes['class'][] = 'field-group-background-image';
 
-    // @todo: check image style!s
-
-    // Add the background image when a field has been selected in the settings form
+    // Add a background image when a field and style have been selected in the settings form
     // and when it is still present at the time of rendering.
-    if (($image = $this->getSetting('image')) && array_key_exists($image, $this->getImageFields())) {
+    $image = $this->getSetting('image');
+    $image_style = $this->getSetting('image_style');
+    if (!empty($image) && !empty($image_style) && array_key_exists($image, $this->getImageFields())) {
       // Only add a background image if one is present.
       if ($imageFieldValue = $rendering_object['#' . $this->group->entity_type]->get($image)->getValue()) {
         $fid = $imageFieldValue[0]['target_id'];
         $fileUri = File::load($fid)->getFileUri();
-        $url = ImageStyle::load($this->getSetting('image_style'))->buildUrl($fileUri);
+        $url = ImageStyle::load($image_style)->buildUrl($fileUri);
         $attributes['style'] = strtr("background-image: url('@url')", ['@url' => $url]);
       }    
     }
