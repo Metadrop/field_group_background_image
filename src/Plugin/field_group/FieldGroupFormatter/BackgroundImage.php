@@ -30,7 +30,7 @@ class BackgroundImage extends FieldGroupFormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function preRender(&$element, $rendering_object) {
+  public function preRender(&$element, $renderingObject) {
     $attributes = new Attribute();   
 
     // Add the HTML ID.
@@ -45,30 +45,76 @@ class BackgroundImage extends FieldGroupFormatterBase {
     }
     $attributes['class'][] = 'field-group-background-image';
 
-    // Add a background image when a field and style have been selected in the settings form
-    // and when it is still present at the time of rendering.
+    // Add the image as a background.
     $image = $this->getSetting('image');
-    $image_style = $this->getSetting('image_style');
-    if (!empty($image) && !empty($image_style) && array_key_exists($image, $this->getImageFields())) {
-      // Only add a background image if one is present.
-      if ($imageFieldValue = $rendering_object['#' . $this->group->entity_type]->get($image)->getValue()) {
-        $fid = $imageFieldValue[0]['target_id'];
-        $fileUri = File::load($fid)->getFileUri();
-        $url = ImageStyle::load($image_style)->buildUrl($fileUri);
-        $attributes['style'] = strtr("background-image: url('@url')", ['@url' => $url]);
-      }    
+    $imageStyle = $this->getSetting('image_style');
+    if ($style = $this->generateStyleAttribute($renderingObject, $image, $imageStyle)) {
+      $attributes['style'] = $style;
     }
-
+    
     // Render the element as a HTML div and add the attributes.
     $element['#type'] = 'container';
     $element['#attributes'] = $attributes;
   }
 
   /**
-   * Get all image fields for the current entity and bundle.
-   * @return array
+   * Generates the background image style attribute given an image and image 
+   * style.
+   *
+   * @param string $image
+   * @param string $imageStyle
+   * @return string
    */
-  protected function getImageFields() {
+  protected function generateStyleAttribute($renderingObject, $image, $imageStyle) {
+    $style = '';
+
+    $validImage = array_key_exists($image, $this->imageFields());
+    $validImageStyle = ($imageStyle === '') || array_key_exists($imageStyle, image_style_options(FALSE));
+
+    if ($validImage && $validImageStyle) {
+      if ($url = $this->imageUrl($renderingObject, $image, $imageStyle)) {
+        $style = strtr('background-image: url(\'@url\')', ['@url' => $url]);
+      }
+    }
+
+    return $style;
+  }
+
+  /**
+   * Returns an image URL for the rendered object given an image field name and 
+   * an image style.
+   *
+   * @param $renderingObject
+   * @param $image
+   * @param $imageStyle
+   * @return string
+   */
+  protected function imageUrl($renderingObject, $image, $imageStyle) {
+    $url = '';
+
+    if ($imageFieldValue = $renderingObject['#' . $this->group->entity_type]->get($image)->getValue()) {
+
+      $fid = $imageFieldValue[0]['target_id'];
+      $fileUri = File::load($fid)->getFileUri();
+
+      // When no image style is selected, use the original image.
+      if ($imageStyle === '') {
+        $url = file_create_url($fileUri);
+      }
+      else {
+        $url = ImageStyle::load($imageStyle)->buildUrl($fileUri);
+      }
+    }
+
+    return $url;
+  }
+
+  /**
+   * Get all image fields for the current entity and bundle.
+   *
+   * @return array Image field key value pair.
+   */
+  protected function imageFields() {
     $fields = \Drupal::entityManager()->getFieldDefinitions($this->group->entity_type, $this->group->bundle);
 
     $imageFields = [];
@@ -87,25 +133,33 @@ class BackgroundImage extends FieldGroupFormatterBase {
   public function settingsForm() {
     $form = parent::settingsForm();
 
-    if ($imageFields = $this->getImageFields()) {
+    $form['label']['#access'] = FALSE;
+
+    if ($imageFields = $this->imageFields()) {
       $form['image'] = [
-        '#title' => t('Image'),
+        '#title' => $this->t('Image'),
         '#type' => 'select',
-        '#options' => $imageFields,
+        '#options' => [
+          '' => $this->t('- Select -'),
+        ],
         '#default_value' => $this->getSetting('image'),
         '#weight' => 1,
       ];
+      $form['image']['#options'] += $imageFields;
 
       $form['image_style'] = [
-        '#title' => t('Image style'),
+        '#title' => $this->t('Image style'),
         '#type' => 'select',
-        '#options' => image_style_options(FALSE),
+        '#options' => [
+          '' => $this->t('- Select -'),
+        ],
         '#default_value' => $this->getSetting('image_style'),
         '#weight' => 2,
       ];
+      $form['image_style']['#options'] += image_style_options(FALSE);
     } else {
       $form['error'] = [
-        '#markup' => t('Please add an image field to continue.'),
+        '#markup' => $this->t('Please add an image field to continue.'),
       ];
     }
 
@@ -119,7 +173,7 @@ class BackgroundImage extends FieldGroupFormatterBase {
     $summary = parent::settingsSummary();
 
     if ($image = $this->getSetting('image')) {
-      $imageFields = $this->getImageFields();
+      $imageFields = $this->imageFields();
       $summary[] = $this->t('Image field: @image', ['@image' => $imageFields[$image]]);
     }
 
