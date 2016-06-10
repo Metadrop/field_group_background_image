@@ -168,7 +168,8 @@ class BackgroundImage extends FieldGroupFormatterBase {
         '#weight' => 2,
       ];
       $form['image_style']['#options'] += image_style_options(FALSE);
-    } else {
+    }
+    else {
       $form['error'] = [
         '#markup' => $this->t('Please add an image field to continue.'),
       ];
