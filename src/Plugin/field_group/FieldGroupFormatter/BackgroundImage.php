@@ -39,11 +39,7 @@ class BackgroundImage extends FieldGroupFormatterBase {
     }
 
     // Add the HTML classes.
-    $attributes['class'] = [];
-    if ($classes = $this->getSetting('classes')) {
-      $attributes['class'] = explode(' ', $classes);
-    }
-    $attributes['class'][] = 'field-group-background-image';
+    $attributes['class'] = $this->getClasses();
 
     // Add the image as a background.
     $image = $this->getSetting('image');
@@ -78,6 +74,21 @@ class BackgroundImage extends FieldGroupFormatterBase {
     }
 
     return $style;
+  }
+
+  /**
+   * Gets all HTML classes, cleaned for displaying.
+   * 
+   * @see \Drupal\field_group\FieldGroupFormatterBase::getClasses().
+   * 
+   * @return array
+   */
+  protected function getClasses() {
+    $classes = parent::getClasses();
+    $classes[] = 'field-group-background-image';
+    $classes = array_map(['\Drupal\Component\Utility\Html', 'getClass'], $classes);
+
+    return $classes;
   }
 
   /**
