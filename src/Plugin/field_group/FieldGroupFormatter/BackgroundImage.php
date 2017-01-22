@@ -47,6 +47,9 @@ class BackgroundImage extends FieldGroupFormatterBase {
     if ($style = $this->generateStyleAttribute($renderingObject, $image, $imageStyle)) {
       $attributes['style'] = $style;
     }
+    elseif ($this->getSetting('hide_if_missing')) {
+      hide($element);
+    }
     
     // Render the element as a HTML div and add the attributes.
     $element['#type'] = 'container';
@@ -168,6 +171,14 @@ class BackgroundImage extends FieldGroupFormatterBase {
         '#weight' => 2,
       ];
       $form['image_style']['#options'] += image_style_options(FALSE);
+
+      $form['hide_if_missing'] = array(
+        '#type' => 'checkbox',
+        '#title' => $this->t('Hide if missing image'),
+        '#description' => $this->t('Do not render the field group if the image is missing from the selected field.'),
+        '#default_value' => $this->getSetting('hide_if_missing'),
+        '#weight' => 3,
+      );
     }
     else {
       $form['error'] = [
