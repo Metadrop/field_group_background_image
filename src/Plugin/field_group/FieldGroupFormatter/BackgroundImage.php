@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\field_group_background_image\Plugin\field_group\FieldGroupFormatter\Link.
- */
-
 namespace Drupal\field_group_background_image\Plugin\field_group\FieldGroupFormatter;
 
 use Drupal\Component\Utility\Html;
