@@ -2,11 +2,17 @@
 
 namespace Drupal\field_group_background_image\Plugin\field_group\FieldGroupFormatter;
 
+/**
+ * @file
+ * Contains \Drupal\field_group_background_image\Plugin\field_group\FieldGroupFormatter\Link.
+ */
+
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Template\Attribute;
 use Drupal\field_group\FieldGroupFormatterBase;
 use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
+use Drupal\media\Entity\Media;
 
 /**
  * Plugin implementation of the 'background image' formatter.
@@ -26,7 +32,8 @@ class BackgroundImage extends FieldGroupFormatterBase {
    * {@inheritdoc}
    */
   public function preRender(&$element, $renderingObject) {
-    $attributes = new Attribute();   
+
+    $attributes = new Attribute();
 
     // Add the HTML ID.
     if ($id = $this->getSetting('id')) {
@@ -45,19 +52,24 @@ class BackgroundImage extends FieldGroupFormatterBase {
     elseif ($this->getSetting('hide_if_missing')) {
       hide($element);
     }
-    
+
     // Render the element as a HTML div and add the attributes.
     $element['#type'] = 'container';
     $element['#attributes'] = $attributes;
   }
 
   /**
-   * Generates the background image style attribute given an image and image 
-   * style.
+   * Generates the background image style attribute.
    *
+   * @param object $renderingObject
+   *   Rendering Object.
    * @param string $image
+   *   Image.
    * @param string $imageStyle
+   *   Image Style.
+   *
    * @return string
+   *   Background Image style inline with absolute url.
    */
   protected function generateStyleAttribute($renderingObject, $image, $imageStyle) {
     $style = '';
@@ -76,10 +88,9 @@ class BackgroundImage extends FieldGroupFormatterBase {
 
   /**
    * Gets all HTML classes, cleaned for displaying.
-   * 
-   * @see \Drupal\field_group\FieldGroupFormatterBase::getClasses().
-   * 
+   *
    * @return array
+   *   Classes.
    */
   protected function getClasses() {
     $classes = parent::getClasses();
@@ -90,45 +101,83 @@ class BackgroundImage extends FieldGroupFormatterBase {
   }
 
   /**
-   * Returns an image URL for the rendered object given an image field name and 
-   * an image style.
+   * Returns an image URL to be used in the Field Group.
    *
-   * @param $renderingObject
-   * @param $image
-   * @param $imageStyle
+   * @param object $renderingObject
+   *   The object being rendered.
+   * @param string $field
+   *   Image field name.
+   * @param string $imageStyle
+   *   Image style name.
+   *
    * @return string
+   *   Image URL.
    */
-  protected function imageUrl($renderingObject, $image, $imageStyle) {
-    $url = '';
+  protected function imageUrl($renderingObject, $field, $imageStyle) {
+    $imageUrl = '';
 
-    if ($imageFieldValue = $renderingObject['#' . $this->group->entity_type]->get($image)->getValue()) {
+    /* @var EntityInterface $entity */
+    if (!($entity = $renderingObject['#' . $this->group->entity_type])) {
+      return $imageUrl;
+    }
 
-      $fid = $imageFieldValue[0]['target_id'];
-      $fileUri = File::load($fid)->getFileUri();
+    if ($imageFieldValue = $renderingObject['#' . $this->group->entity_type]->get($field)->getValue()) {
 
-      // When no image style is selected, use the original image.
-      if ($imageStyle === '') {
-        $url = file_create_url($fileUri);
-      }
-      else {
-        $url = ImageStyle::load($imageStyle)->buildUrl($fileUri);
+      // Fid for image or entity_id.
+      if (!empty($imageFieldValue[0]['target_id'])) {
+        $entity_id = $imageFieldValue[0]['target_id'];
+
+        $fieldDefinition = $entity->getFieldDefinition($field);
+        // Get the media or file URI.
+        if (
+          $fieldDefinition->getType() == 'entity_reference' &&
+          $fieldDefinition->getSetting('target_type') == 'media'
+        ) {
+
+          // Load media.
+          $entity_media = Media::load($entity_id);
+
+          // Loop over entity fields.
+          foreach ($entity_media->getFields() as $field_name => $field) {
+            if (
+              $field->getFieldDefinition()->getType() === 'image' &&
+              $field->getFieldDefinition()->getName() !== 'thumbnail'
+            ) {
+              $fileUri = $entity_media->{$field_name}->entity->getFileUri();
+            }
+          }
+        }
+        else {
+          $fileUri = File::load($entity_id)->getFileUri();
+        }
+
+        // When no image style is selected, use the original image.
+        if ($imageStyle === '') {
+          $imageUrl = file_create_url($fileUri);
+        }
+        else {
+          $imageUrl = ImageStyle::load($imageStyle)->buildUrl($fileUri);
+        }
       }
     }
 
-    return $url;
+    return $imageUrl;
   }
 
   /**
    * Get all image fields for the current entity and bundle.
    *
-   * @return array Image field key value pair.
+   * @return array
+   *   Image field key value pair.
    */
   protected function imageFields() {
-    $fields = \Drupal::entityManager()->getFieldDefinitions($this->group->entity_type, $this->group->bundle);
+
+    $entityFieldManager = \Drupal::service('entity_field.manager');
+    $fields = $entityFieldManager->getFieldDefinitions($this->group->entity_type, $this->group->bundle);
 
     $imageFields = [];
     foreach ($fields as $field) {
-      if ($field->getType() === 'image') {
+      if ($field->getType() === 'image' || ($field->getType() === 'entity_reference' && $field->getSetting('target_type') == 'media')) {
         $imageFields[$field->get('field_name')] = $field->label();
       }
     }
@@ -167,13 +216,13 @@ class BackgroundImage extends FieldGroupFormatterBase {
       ];
       $form['image_style']['#options'] += image_style_options(FALSE);
 
-      $form['hide_if_missing'] = array(
+      $form['hide_if_missing'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Hide if missing image'),
         '#description' => $this->t('Do not render the field group if the image is missing from the selected field.'),
         '#default_value' => $this->getSetting('hide_if_missing'),
         '#weight' => 3,
-      );
+      ];
     }
     else {
       $form['error'] = [

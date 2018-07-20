@@ -4,5 +4,5 @@ description: Field Group Background Image
 core: 8.x
 package: Fields
 dependencies:
-  - field
-  - field_group
+  - drupal:field
+  - drupal:field_group
