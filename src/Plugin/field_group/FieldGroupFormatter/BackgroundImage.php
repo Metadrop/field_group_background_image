@@ -161,7 +161,7 @@ class BackgroundImage extends FieldGroupFormatterBase {
       }
     }
 
-    return $imageUrl;
+    return file_url_transform_relative($imageUrl);
   }
 
   /**
