@@ -2,6 +2,7 @@ name: Field Group Background Image
 type: module
 description: Field Group Background Image
 core: 8.x
+core_version_requirement: ^8 || ^9
 package: Fields
 dependencies:
   - drupal:field
