@@ -22,6 +22,6 @@
     "source": "http://cgit.drupalcode.org/field_group_background_image"
   },
   "require": {
-    "drupal/field_group": "8.*"
+    "drupal/field_group": "^3."
   }
 }
